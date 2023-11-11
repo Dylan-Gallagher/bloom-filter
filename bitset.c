@@ -8,12 +8,6 @@
 #include <assert.h>
 #include <stdint.h>
 
-struct bitset {
-    int universe_size;
-    int size_in_words;
-    uint64_t * bits;
-};
-
 // create a new, empty bit vector set with a universe of 'size' items
 struct bitset * bitset_new(int size) {
     // bits is a pointer to an array
@@ -26,12 +20,14 @@ struct bitset * bitset_new(int size) {
         size_in_words_var++;
     }
     struct bitset * result = calloc(1, sizeof(struct bitset));
-    result->bits = (uint64_t *)calloc(size_in_words, sizeof(uint64_t));
+    result->bits = (uint64_t *)calloc(size_in_words_var, sizeof(uint64_t));
     result->universe_size = size;
     result->size_in_words = size_in_words_var;
     return result;
 }
 
+
+/*
 // inserts an item into a uint64_t bitset
 // this should be called by another method that pre-selects set and item correctly
 uint64_t insert(uint64_t set, int item) {
@@ -40,14 +36,17 @@ uint64_t insert(uint64_t set, int item) {
     uint64_t result = set | mask;
     return result;
 }
+*/
 
+/*
 // removes an item from a uint64_t bitset
 // this should be called by another method that pre-selects set and item correctly
-uint64_t remove(uint64_t set, item) {
+uint64_t remove(uint64_t set, int item) {
     uint64_t mask = ~(1ULL << item);
     uint64_t result = set & mask;
     return result;
 }
+*/
 
 /*
 // checks if an item is a member of a uint64_t bitset
@@ -103,10 +102,12 @@ int cardinality(uint64_t set){
 int bitset_lookup(struct bitset * this, int item){
     int index = item / 64;
     int shift_amount = item - (index * 64);
-    uint64_t element = this->bits[index];
     uint64_t mask = 1ULL << shift_amount;
-    uint64_t result = element & mask;
-    return result >> shift_amount;
+    uint64_t result = this->bits[index] & mask;
+    if (result > 0) {
+        return 1;
+    }
+    return 0;
 }
 
 // add an item, with number 'item' to the set
@@ -114,35 +115,39 @@ int bitset_lookup(struct bitset * this, int item){
 void bitset_add(struct bitset * this, int item) {
     int index = item / 64;
     int shift_amount = item - (index * 64);
-    uint64_t element = this->bits[index];
     uint64_t mask = 1ULL << shift_amount;
-    uint64_t result = element | mask;
+    this->bits[index] = this->bits[index] | mask;
 }
 
 // remove an item with number 'item' from the set
 void bitset_remove(struct bitset * this, int item) {
     int index = item / 64;
     int shift_amount = item - (index * 64);
-    uint64_t element = this->bits[index];
-    uint64_t mask = ~(1ULL << item);
-    uint64_t result = element & mask;
-    // todo: this probably doesnt work because I need to actually update the bits array, not just calculate it. Same for the other functions
+    uint64_t mask = ~(1ULL << shift_amount);
+    this->bits[index] = this->bits[index] & mask;
 }
 
 // place the union of src1 and src2 into dest;
 // all of src1, src2, and dest must have the same size universe
 void bitset_union(struct bitset * dest, struct bitset * src1, struct bitset * src2) {
-    assert(src1 -> universe_size == src2 -> universese_size);
+    assert(src1 -> universe_size == src2 -> universe_size);
     
     // add something to check size of dest
+    // or just dont??
 
-    for (int i = 0; i < src1 -> size_in_words; i++) { // size_in_words as it contains the number of array elements
-        dest -> bits[i] = (src1 -> bits[i]) | (src2 -> bits[i]);
+    for (int i = 0; i < src1->size_in_words; i++) { // size_in_words as it contains the number of array elements
+        dest->bits[i] = (src1->bits[i]) | (src2->bits[i]);
     }
 }
 
 // place the intersection of src1 and src2 into dest
 // all of src1, src2, and dest must have the same size universe
-void bitset_intersect(struct bitset * dest, struct bitset * src1,
-    struct bitset * src2) {
+void bitset_intersect(struct bitset * dest, struct bitset * src1, struct bitset * src2) { 
+    assert(src1 -> universe_size == src2 -> universe_size);
+
+
+    for (int i = 0; i < src1->size_in_words; i++) { // size_in_words as it contains the number of array elements
+        dest->bits[i] = (src1->bits[i]) & (src2->bits[i]);
+    }
+
 }

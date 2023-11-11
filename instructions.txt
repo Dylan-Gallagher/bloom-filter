@@ -35,6 +35,12 @@ so e.g. universe_size = 100, size_in_words = 2
 
 ****
 
+****
+expected output of the first test
+
+10 32 46 79 97 100 101 103 104 105 107 108 110 111 112 116
+****
+
 ****   
 How do i access the elements?
 
